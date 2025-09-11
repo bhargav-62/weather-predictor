@@ -3,3 +3,4 @@ flask-cors
 requests
 scikit-learn
 pandas
+gunicorn
