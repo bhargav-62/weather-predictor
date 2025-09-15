@@ -1,67 +1,192 @@
+/* Base and variables */
 :root {
-  --bg-color-light: #f0f4f8;
-  --bg-color-dark: #121212;
-  --text-color-light: #222;
-  --text-color-dark: #eee;
+  --bg-color: #f0f4f8;
+  --text-color: #222;
   --primary-color: #007acc;
   --secondary-color: #0a74da;
   --button-bg: var(--primary-color);
   --button-hover-bg: #005fa3;
-  --card-bg-light: white;
-  --card-bg-dark: #1e1e1e;
-  --input-border-light: #ccc;
-  --input-border-dark: #444;
-  --shadow-light: rgba(0, 0, 0, 0.15);
-  --shadow-dark: rgba(0, 0, 0, 0.7);
+  --card-bg: white;
+  --input-border: #ccc;
+  --shadow: rgba(0, 0, 0, 0.15);
   --border-radius: 12px;
   --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* Light Theme */
 [data-theme='light'] {
-  --bg-color: var(--bg-color-light);
-  --text-color: var(--text-color-light);
-  --card-bg: var(--card-bg-light);
-  --input-border: var(--input-border-light);
-  --shadow: var(--shadow-light);
+  --bg-color: #f0f4f8;
+  --text-color: #222;
+  --primary-color: #007acc;
+  --secondary-color: #0a74da;
+  --button-bg: var(--primary-color);
+  --button-hover-bg: #005fa3;
+  --card-bg: white;
+  --input-border: #ccc;
+  --shadow: rgba(0, 0, 0, 0.15);
 }
 
+/* Dark Theme */
 [data-theme='dark'] {
-  --bg-color: var(--bg-color-dark);
-  --text-color: var(--text-color-dark);
-  --card-bg: var(--card-bg-dark);
-  --input-border: var(--input-border-dark);
-  --shadow: var(--shadow-dark);
+  --bg-color: #121212;
+  --text-color: #eee;
+  --primary-color: #3399ff;
+  --secondary-color: #66b3ff;
+  --button-bg: #3399ff;
+  --button-hover-bg: #2277dd;
+  --card-bg: #1e1e1e;
+  --input-border: #444;
+  --shadow: rgba(0, 0, 0, 0.7);
 }
 
-html, body {
+/* Blue Theme */
+[data-theme='blue'] {
+  --bg-color: #e6f0fa;
+  --text-color: #004080;
+  --primary-color: #0059b3;
+  --secondary-color: #003366;
+  --button-bg: #0059b3;
+  --button-hover-bg: #003d73;
+  --card-bg: #d9e6f2;
+  --input-border: #99c2ff;
+  --shadow: rgba(0, 0, 128, 0.2);
+}
+
+/* Green Theme */
+[data-theme='green'] {
+  --bg-color: #e8f5e9;
+  --text-color: #1b5e20;
+  --primary-color: #2e7d32;
+  --secondary-color: #1b5e20;
+  --button-bg: #2e7d32;
+  --button-hover-bg: #1b5e20;
+  --card-bg: #dcedc8;
+  --input-border: #a5d6a7;
+  --shadow: rgba(0, 100, 0, 0.2);
+}
+
+/* Purple Theme */
+[data-theme='purple'] {
+  --bg-color: #f3e5f5;
+  --text-color: #4a148c;
+  --primary-color: #7b1fa2;
+  --secondary-color: #4a148c;
+  --button-bg: #7b1fa2;
+  --button-hover-bg: #4a148c;
+  --card-bg: #e1bee7;
+  --input-border: #ce93d8;
+  --shadow: rgba(75, 0, 130, 0.2);
+}
+
+/* Gold Theme */
+[data-theme='gold'] {
+  --bg-color: #fff8e1;
+  --text-color: #665500;
+  --primary-color: #d4af37;
+  --secondary-color: #b8952a;
+  --button-bg: #d4af37;
+  --button-hover-bg: #aa8f25;
+  --card-bg: #fffde7;
+  --input-border: #f0e68c;
+  --shadow: rgba(165, 135, 20, 0.3);
+}
+
+/* Orange Theme */
+[data-theme='orange'] {
+  --bg-color: #fff3e0;
+  --text-color: #bf5700;
+  --primary-color: #fb8c00;
+  --secondary-color: #ef6c00;
+  --button-bg: #fb8c00;
+  --button-hover-bg: #e65100;
+  --card-bg: #fff8e1;
+  --input-border: #ffcc80;
+  --shadow: rgba(235, 125, 0, 0.3);
+}
+
+/* Yellow Theme */
+[data-theme='yellow'] {
+  --bg-color: #fffde7;
+  --text-color: #665c00;
+  --primary-color: #fbc02d;
+  --secondary-color: #f9a825;
+  --button-bg: #fbc02d;
+  --button-hover-bg: #f9a825;
+  --card-bg: #fffde7;
+  --input-border: #fff59d;
+  --shadow: rgba(210, 180, 0, 0.3);
+}
+
+/* Neon Theme */
+[data-theme='neon'] {
+  --bg-color: #000000;
+  --text-color: #39ff14;
+  --primary-color: #0afff0;
+  --secondary-color: #ff00de;
+  --button-bg: #39ff14;
+  --button-hover-bg: #20cc0f;
+  --card-bg: #0d0d0d;
+  --input-border: #39ff14;
+  --shadow: rgba(57, 255, 20, 0.7);
+}
+
+/* Radium Theme */
+[data-theme='radium'] {
+  --bg-color: #0b0033;
+  --text-color: #add8e6;
+  --primary-color: #7f00ff;
+  --secondary-color: #b266ff;
+  --button-bg: #7f00ff;
+  --button-hover-bg: #5c0099;
+  --card-bg: #1c003d;
+  --input-border: #b266ff;
+  --shadow: rgba(127, 0, 255, 0.6);
+}
+
+/* Global styles */
+
+body {
   background-color: var(--bg-color);
   color: var(--text-color);
   font-family: var(--font-family);
   margin: 0;
   padding: 0;
-  height: 100%;
-  width: 100%;
 }
 
+/* Header */
+header {
+  background-color: var(--primary-color);
+  padding: 15px 20px;
+  color: white;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+header a {
+  color: white;
+  margin-left: 15px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+header a:hover {
+  text-decoration: underline;
+}
+
+/* Container */
 .container {
   max-width: 700px;
-  margin: 2rem auto 3rem;
-  padding: 2rem;
+  margin: 20px auto;
+  padding: 20px;
   background-color: var(--card-bg);
   border-radius: var(--border-radius);
   box-shadow: 0 8px 24px var(--shadow);
   box-sizing: border-box;
 }
 
-h1 {
-  text-align: center;
-  color: var(--primary-color);
-  margin-bottom: 1.5rem;
-  font-weight: 700;
-  font-size: 2.5rem;
-  letter-spacing: 1.5px;
-}
-
+/* Inputs */
 input[type="text"] {
   width: 100%;
   padding: 14px 18px;
@@ -69,9 +194,9 @@ input[type="text"] {
   border: 1.8px solid var(--input-border);
   border-radius: var(--border-radius);
   margin-bottom: 1rem;
-  transition: border-color 0.3s ease;
   background-color: var(--card-bg);
   color: var(--text-color);
+  transition: border-color 0.3s ease;
   box-sizing: border-box;
 }
 
@@ -81,6 +206,7 @@ input[type="text"]:focus {
   box-shadow: 0 0 8px var(--secondary-color);
 }
 
+/* Buttons */
 button {
   background-color: var(--button-bg);
   border: none;
@@ -91,17 +217,13 @@ button {
   font-size: 1rem;
   cursor: pointer;
   margin-right: 0.8rem;
-  box-shadow: 0 6px 12px rgba(0, 122, 204, 0.5);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
   transition: background-color 0.25s ease, box-shadow 0.25s ease;
-}
-
-button:last-child {
-  margin-right: 0;
 }
 
 button:hover:not(:disabled) {
   background-color: var(--button-hover-bg);
-  box-shadow: 0 8px 15px rgba(0, 95, 163, 0.7);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
 button:disabled {
@@ -110,168 +232,89 @@ button:disabled {
   box-shadow: none;
 }
 
-.favorites {
-  margin-bottom: 2rem;
-}
-
-.favorites h3 {
-  color: var(--secondary-color);
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.favorites button {
-  margin: 0 0.5rem 0.5rem 0;
-  padding: 10px 18px;
-  font-weight: 600;
-  box-shadow: 0 4px 10px rgba(10, 116, 218, 0.4);
-}
-
-.weather-info {
-  margin-bottom: 2rem;
-  font-size: 1.1rem;
-}
-
-.weather-info p strong {
-  font-weight: 700;
-  color: var(--primary-color);
-}
-
+/* Weather info */
+.weather-info,
 .forecast-info {
-  margin-bottom: 2rem;
+  padding: 20px;
+  margin-top: 20px;
+  border-radius: var(--border-radius);
+  background-color: var(--card-bg);
+  box-shadow: 0 0 15px var(--shadow);
 }
 
-.forecast-info h3 {
-  color: var(--secondary-color);
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
+/* Forecast days */
 .forecast-row {
   display: flex;
-  gap: 12px;
+  gap: 15px;
   overflow-x: auto;
-  padding-bottom: 12px;
+  padding-bottom: 10px;
 }
 
 .forecast-card {
-  background: var(--card-bg);
+  background-color: var(--card-bg);
   border-radius: var(--border-radius);
-  border: 2px solid transparent;
-  box-shadow: 0 4px 10px var(--shadow);
-  padding: 1rem;
-  min-width: 120px;
-  transition: border-color 0.3s ease;
-  cursor: pointer;
-  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--shadow);
+  padding: 12px;
+  min-width: 110px;
   text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  user-select: none;
 }
 
 .forecast-card:hover,
 .forecast-card.selected {
   border-color: var(--primary-color);
-  box-shadow: 0 6px 15px var(--shadow);
   background-color: #eaf7ff;
+  box-shadow: 0 0 15px var(--shadow);
 }
 
-.forecast-card-date {
-  font-weight: 700;
-  color: var(--primary-color);
-  margin-bottom: 0.5rem;
-  font-size: 0.95rem;
-}
-
-.forecast-card-icon {
-  font-size: 36px;
-  color: var(--primary-color);
-  margin: 0.5rem 0;
-}
-
-.forecast-card-temp {
-  font-weight: 700;
-  font-size: 1.2rem;
-  color: var(--text-color);
-}
-
-.forecast-card-cond {
-  font-size: 0.9rem;
-  color: var(--secondary-color);
-}
-
-.suggestions-panel {
-  margin-top: 2rem;
-  background-color: var(--card-bg);
-  padding: 1.5rem 2rem;
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 10px var(--shadow);
-}
-
-.suggestions-panel h3 {
-  color: var(--secondary-color);
-  margin-bottom: 1rem;
-}
-
-.suggestions-panel p,
-.suggestions-panel blockquote {
-  font-style: italic;
+/* Error and loading texts */
+.error-message {
+  color: #b00020;
   font-weight: 600;
-  color: var(--text-color);
-  margin-top: 0.25rem;
+  margin-top: 20px;
+  text-align: center;
 }
 
-.mood-feedback {
-  margin-top: 2rem;
-  background-color: #eef4fb;
-  padding: 1rem 2rem;
-  border-radius: var(--border-radius);
-  box-shadow: 0 4px 8px #b3c9ee;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
+.loading-text {
+  color: var(--primary-color);
+  margin-top: 10px;
+  text-align: center;
 }
 
-.mood-feedback label {
-  font-weight: 700;
-  font-size: 1.1rem;
-  color: var(--secondary-color);
-  margin-right: 10px;
-}
-
-.mood-feedback button {
-  font-size: 28px;
-  border-radius: 8px;
-  border: 2px solid transparent;
-  padding: 5px 10px;
-  cursor: pointer;
-  transition: all 0.25s;
-  background: transparent;
+/* Footer */
+footer {
+  background-color: var(--card-bg);
+  text-align: center;
+  padding: 15px 0;
+  font-size: 0.9rem;
   color: var(--text-color);
 }
 
-.mood-feedback button.selected {
-  background: var(--secondary-color);
-  color: white;
-  border-color: var(--primary-color);
-}
-
+/* Responsive */
 @media (max-width: 600px) {
   .container {
-    margin: 1rem;
-    padding: 1rem 1.2rem;
+    margin: 15px;
+    padding: 15px;
+  }
+
+  input[type="text"] {
+    font-size: 1rem;
   }
 
   button {
-    padding: 12px;
-    font-size: 0.9rem;
+    width: 100%;
+    margin: 10px 0;
   }
 
   .forecast-row {
-    gap: 8px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .forecast-card {
-    min-width: 100px;
-    padding: 0.8rem;
+    min-width: 100%;
   }
 }

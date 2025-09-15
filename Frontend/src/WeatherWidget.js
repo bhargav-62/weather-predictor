@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import translations from './translations';
 import {
   fetchWeather,
-  fetchWeatherByCoords,
   fetchForecast,
-  fetchForecastByCoords,
 } from './api';
-import CommunityReports from './CommunityReports';
+
+const moodPlaylists = {
+  rainy: 'https://open.spotify.com/playlist/37i9dQZF1DX1g0iEXLFycr',
+  sunny: 'https://open.spotify.com/playlist/37i9dQZF1DX0XUsuxWHRQd',
+  default: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6',
+};
 
 const iconMap = {
   'Partly cloudy': 'wi-day-cloudy',
@@ -19,17 +24,8 @@ const iconMap = {
   Overcast: 'wi-cloudy',
 };
 
-const getDayShort = (dateStr) => {
-  return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short' });
-};
-
-const moodPlaylists = {
-  rainy: 'https://open.spotify.com/playlist/37i9dQZF1DX1g0iEXLFycr', // Chill Rainy Day
-  sunny: 'https://open.spotify.com/playlist/37i9dQZF1DX0XUsuxWHRQd', // Upbeat Sunny Day
-  default: 'https://open.spotify.com/playlist/37i9dQZF1DWUZl01Gp8zN2', // Relaxing Ambient
-};
-
-const getSuggestions = (condition, temperature) => {
+const getSuggestions = (condition, temperature, language) => {
+  const t = translations[language] || translations.en;
   const hour = new Date().getHours();
   const timeOfDay = hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
 
@@ -38,22 +34,22 @@ const getSuggestions = (condition, temperature) => {
   let motivationalQuote = '';
 
   if (condition.toLowerCase().includes('rain')) {
-    activity = `Cozy up and read a book this ${timeOfDay}.`;
+    activity = `${t.cozyUp} ${timeOfDay}.`;
     playlistKey = 'rainy';
-    motivationalQuote = "Sometimes the rain speaks to your soul more than words ever could.";
+    motivationalQuote = t.rainQuote;
   } else if (condition.toLowerCase().includes('clear') || condition.toLowerCase().includes('sunny')) {
-    activity = `Perfect weather for a walk this ${timeOfDay}!`;
+    activity = `${t.perfectWeather} ${timeOfDay}!`;
     playlistKey = 'sunny';
-    motivationalQuote = "Let the sunshine inspire your bright ideas.";
+    motivationalQuote = t.sunQuote;
   } else {
-    activity = `Try meditating or yoga this ${timeOfDay}.`;
-    motivationalQuote = "Peace comes from within, no matter the weather outside.";
+    activity = `${t.meditate} ${timeOfDay}.`;
+    motivationalQuote = t.peaceQuote;
   }
 
   if (temperature && temperature < 10) {
-    activity += " Don't forget to dress warmly!";
+    activity += ` ${t.dressWarmly || "Don't forget to dress warmly!"}`;
   } else if (temperature && temperature > 30) {
-    activity += ' Stay hydrated and cool.';
+    activity += ` ${t.stayHydrated || "Stay hydrated and cool."}`;
   }
 
   return {
@@ -65,218 +61,40 @@ const getSuggestions = (condition, temperature) => {
 };
 
 const WeatherWidget = () => {
+  const [language, setLanguage] = useState('en');
   const [location, setLocation] = useState('');
-  const [userCoords, setUserCoords] = useState(null);
   const [weather, setWeather] = useState(null);
   const [forecast, setForecast] = useState([]);
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [favorites, setFavorites] = useState([]);
   const [error, setError] = useState(null);
-
   const [suggestions, setSuggestions] = useState({
     activity: '',
     playlistUrl: '',
     playlistName: '',
     motivationalQuote: '',
   });
-
   const [userMood, setUserMood] = useState(null);
 
-  // Voice interaction states
-  const [listening, setListening] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
-
-  // Setup Web Speech API recognition
-  let recognition = null;
-  if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SpeechRecognition();
-    recognition.interimResults = true;
-    recognition.lang = 'en-US';
-  }
-
   useEffect(() => {
-    if ('Notification' in window && Notification.permission !== 'granted') {
-      Notification.requestPermission();
-    }
-  }, []);
-
-  useEffect(() => {
-    const storedFavs = localStorage.getItem('favoriteCities');
-    if (storedFavs) {
-      setFavorites(JSON.parse(storedFavs));
-    }
-
-    const storedMood = localStorage.getItem('weatherAppUserMood');
-    if (storedMood) {
-      setUserMood(storedMood);
-    }
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          setUserCoords({ lat, lon });
-          try {
-            setError(null);
-            const weatherData = await fetchWeatherByCoords(lat, lon);
-            setWeather(weatherData);
-            const forecastData = await fetchForecastByCoords(lat, lon);
-            setForecast(forecastData.forecast);
-
-            const newSuggestions = getSuggestions(weatherData.condition || '', weatherData.temperature || null);
-            setSuggestions(newSuggestions);
-
-            if (weatherData.alert && weatherData.alert !== 'None') {
-              notifyUser(weatherData.alert);
-            }
-          } catch {
-            setError('Failed to fetch weather for your location.');
-          }
-        },
-        () => setError('Geolocation permission denied or unavailable.')
-      );
-    } else {
-      setError('Geolocation is not supported by your browser.');
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem('favoriteCities', JSON.stringify(favorites));
-  }, [favorites]);
-
-  const notifyUser = (alertMessage) => {
-    if (!('Notification' in window)) return;
-    if (Notification.permission === 'granted') {
-      new Notification('Weather Alert', {
-        body: alertMessage,
-        icon:
-          'https://icons.iconarchive.com/icons/icons-land/weather/256/Severe-Thunderstorm-icon.png',
-      });
-    }
-  };
-
-  const startListening = () => {
-    if (!recognition) {
-      alert('Speech Recognition is not supported in this browser.');
-      return;
-    }
-
-    recognition.start();
-    setListening(true);
-
-    recognition.onresult = (event) => {
-      const speechToText = Array.from(event.results)
-        .map((result) => result[0])
-        .map((result) => result.transcript)
-        .join('');
-      setLocation(speechToText);
-      if (event.results[0].isFinal) {
-        recognition.stop();
-        setListening(false);
-        handleFetchWithSpeech(speechToText);
-      }
-    };
-
-    recognition.onerror = () => {
-      setListening(false);
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-    };
-  };
-
-  const handleFetchWithSpeech = async (spokenText) => {
-    setError(null);
-    setWeather(null);
-    setForecast([]);
-    setUserCoords(null);
-
-    try {
-      const weatherData = await fetchWeather(spokenText);
-      setWeather(weatherData);
-      const forecastData = await fetchForecast(spokenText);
-      setForecast(forecastData.forecast);
-
-      const newSuggestions = getSuggestions(weatherData.condition || '', weatherData.temperature || null);
+    if (weather) {
+      const newSuggestions = getSuggestions(weather.condition || '', weather.temperature || null, language);
       setSuggestions(newSuggestions);
-      setSelectedDayIndex(0);
-
-      if (weatherData.alert && weatherData.alert !== 'None') {
-        notifyUser(weatherData.alert);
-      }
-
-      readWeatherAloud(weatherData, newSuggestions);
-    } catch (err) {
-      setError(err.error || 'Failed to fetch weather');
     }
-  };
-
-  const readWeatherAloud = (weatherData, suggestions) => {
-    if (!('speechSynthesis' in window)) return;
-
-    const text = `The current weather in ${weatherData.location} is ${weatherData.condition} 
-      with a temperature of ${weatherData.temperature} degrees Celsius. 
-      Suggested activity: ${suggestions.activity}. 
-      Motivational quote: ${suggestions.motivationalQuote}`;
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    setSpeaking(true);
-
-    utterance.onend = () => {
-      setSpeaking(false);
-    };
-    window.speechSynthesis.speak(utterance);
-  };
+  }, [weather, language]);
 
   const handleFetch = async () => {
     setError(null);
     setWeather(null);
     setForecast([]);
-    setUserCoords(null);
-
-    if (/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/.test(location.trim())) {
-      const [lat, lon] = location.split(',').map(Number);
-      setUserCoords({ lat, lon });
-      try {
-        const weatherData = await fetchWeatherByCoords(lat, lon);
-        setWeather(weatherData);
-        const forecastData = await fetchForecastByCoords(lat, lon);
-        setForecast(forecastData.forecast);
-
-        const newSuggestions = getSuggestions(weatherData.condition || '', weatherData.temperature || null);
-        setSuggestions(newSuggestions);
-
-        setSelectedDayIndex(0);
-
-        if (weatherData.alert && weatherData.alert !== 'None') {
-          notifyUser(weatherData.alert);
-        }
-      } catch (err) {
-        setError(err.error || 'Failed to fetch weather');
-      }
-      return;
-    }
-
     try {
       const weatherData = await fetchWeather(location);
       setWeather(weatherData);
       const forecastData = await fetchForecast(location);
       setForecast(forecastData.forecast);
-
-      const newSuggestions = getSuggestions(weatherData.condition || '', weatherData.temperature || null);
-      setSuggestions(newSuggestions);
-
       setSelectedDayIndex(0);
-
-      if (weatherData.alert && weatherData.alert !== 'None') {
-        notifyUser(weatherData.alert);
-      }
-    } catch (err) {
-      setError(err.error || 'Failed to fetch weather');
+    } catch {
+      setError('Failed to fetch weather');
     }
   };
 
@@ -289,25 +107,14 @@ const WeatherWidget = () => {
   const fetchFavorite = async (city) => {
     setLocation(city);
     setError(null);
-    setWeather(null);
-    setForecast([]);
-    setUserCoords(null);
     try {
       const weatherData = await fetchWeather(city);
       setWeather(weatherData);
       const forecastData = await fetchForecast(city);
       setForecast(forecastData.forecast);
-
-      const newSuggestions = getSuggestions(weatherData.condition || '', weatherData.temperature || null);
-      setSuggestions(newSuggestions);
-
       setSelectedDayIndex(0);
-
-      if (weatherData.alert && weatherData.alert !== 'None') {
-        notifyUser(weatherData.alert);
-      }
-    } catch (err) {
-      setError(err.error || 'Failed to fetch weather');
+    } catch {
+      setError('Failed to fetch weather');
     }
   };
 
@@ -315,333 +122,223 @@ const WeatherWidget = () => {
     setSelectedDayIndex(index);
   };
 
-  const handleMoodSelect = (mood) => {
-    setUserMood(mood);
-    localStorage.setItem('weatherAppUserMood', mood);
-  };
+  const readWeatherAloud = () => {
+    if (!weather) return;
+    if (!window.speechSynthesis) {
+      alert('Speech synthesis not supported.');
+      return;
+    }
+    const langVoiceMap = {
+      en: 'en',
+      te: 'te',
+      hi: 'hi',
+      ml: 'ml',
+      ta: 'ta',
+      kn: 'kn',
+    };
 
-  const renderHourly = (hours) => {
-    if (!hours || hours.length === 0)
-      return (
-        <p style={{ fontStyle: 'italic', color: '#666' }}>
-          Hourly data not available for this day.
-        </p>
-      );
-    return (
-      <div style={{ display: 'flex', overflowX: 'auto', padding: '10px 0' }}>
-        {hours.map((hour, idx) => (
-          <div
-            key={idx}
-            style={{
-              minWidth: '70px',
-              marginRight: '15px',
-              textAlign: 'center',
-              border: '1px solid #ced6e0',
-              borderRadius: '8px',
-              background: '#f0f8ff',
-              marginBottom: '2px',
-              boxShadow: '0px 1px 4px #dde4ee',
-              padding: '6px 4px',
-              color: '#2f3542',
-            }}
-          >
-            <div style={{ fontWeight: 600, fontSize: 13 }}>{hour.time}</div>
-            <i
-              className={`wi ${iconMap[hour.conditions] || 'wi-day-sunny'}`}
-              style={{ fontSize: '30px', color: '#007acc' }}
-            ></i>
-            <div>{hour.temperature}°C</div>
-            <div style={{ fontSize: 11 }}>{hour.conditions}</div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+    let text = '';
+    switch (language) {
+      case 'te':
+        text = `[translate:${weather.location} లో వాతావరణం: ${weather.condition}, ఉష్ణోగ్రత: ${weather.temperature}°. ${suggestions.activity} ${suggestions.motivationalQuote}]`;
+        break;
+      case 'hi':
+        text = `[translate:${weather.location} में मौसम: ${weather.condition}, तापमान: ${weather.temperature} डिग्री। ${suggestions.activity} ${suggestions.motivationalQuote}]`;
+        break;
+      case 'ml':
+        text = `[translate:${weather.location}യിൽ കാലാവസ്ഥ: ${weather.condition}, താപനില: ${weather.temperature}°. ${suggestions.activity} ${suggestions.motivationalQuote}]`;
+        break;
+      case 'ta':
+        text = `[translate:${weather.location} இல் வானிலை: ${weather.condition}, வெப்பம்: ${weather.temperature}°. ${suggestions.activity} ${suggestions.motivationalQuote}]`;
+        break;
+      case 'kn':
+        text = `[translate:${weather.location} ನಲ್ಲಿ ಹವಾಮಾನ: ${weather.condition}, ತಾಪಮಾನ: ${weather.temperature}°. ${suggestions.activity} ${suggestions.motivationalQuote}]`;
+        break;
+      default:
+        text = `The current weather in ${weather.location} is ${weather.condition}, with a temperature of ${weather.temperature} degrees Celsius. Suggested activity: ${suggestions.activity}. Motivational quote: ${suggestions.motivationalQuote}.`;
+        break;
+    }
 
-  const renderForecastDays = () => {
-    if (!forecast || forecast.length === 0) return null;
-    return (
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          justifyContent: 'center',
-          margin: '10px 0',
-          overflowX: 'auto',
-          paddingBottom: 7,
-        }}
-      >
-        {forecast.slice(0, 5).map((day, idx) => (
-          <div
-            key={day.date}
-            onClick={() => selectDay(idx)}
-            style={{
-              cursor: 'pointer',
-              minWidth: '110px',
-              maxWidth: '120px',
-              padding: '12px 10px',
-              borderRadius: '10px',
-              border: idx === selectedDayIndex ? '2px solid #007acc' : '1px solid #ccc',
-              background: idx === selectedDayIndex ? '#f3f8fd' : '#fbfdff',
-              boxShadow: idx === selectedDayIndex ? '0px 4px 14px #d4e6fa70' : '0px 1px 4px #dde4ee',
-              transition: 'all 0.25s',
-            }}
-          >
-            <div style={{ fontWeight: 700, color: '#007acc', fontSize: 14 }}>{getDayShort(day.date)}</div>
-            <div style={{ fontSize: 12, color: '#333' }}>{day.date}</div>
-            <div style={{ margin: '8px 0' }}>
-              <i
-                className={`wi ${iconMap[day.conditions.split(',')[0]] || 'wi-day-sunny'}`}
-                style={{ fontSize: '32px', color: '#007acc' }}
-              ></i>
-            </div>
-            <div style={{ fontWeight: 600, fontSize: 16, color: '#333d53' }}>{day.temperature}°C</div>
-            <div style={{ fontSize: 12, color: '#2488c9' }}>{day.conditions}</div>
-          </div>
-        ))}
-      </div>
-    );
-  };
+    const utterance = new window.SpeechSynthesisUtterance(text);
+    const langCode = language || 'en';
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.lang.toLowerCase().startsWith(langVoiceMap[langCode])) || voices[0];
+    if (voice) {
+      utterance.voice = voice;
+      utterance.lang = voice.lang;
+    } else {
+      utterance.lang = 'en-US';
+    }
 
-  const condition = weather?.condition || '';
+    window.speechSynthesis.speak(utterance);
+  };
 
   return (
     <>
-      <div>
+      <div style={{ marginBottom: 15 }}>
+        <label htmlFor="lang-select" style={{ marginRight: 10 }}>
+          Select Language:
+        </label>
+        <select id="lang-select" value={language} onChange={(e) => setLanguage(e.target.value)}>
+          <option value="en">English</option>
+          <option value="te">Telugu</option>
+          <option value="hi">Hindi</option>
+          <option value="ml">Malayalam</option>
+          <option value="ta">Tamil</option>
+          <option value="kn">Kannada</option>
+        </select>
+      </div>
+
+      <div style={{ marginBottom: 15 }}>
         <input
           type="text"
           placeholder="Enter city or coordinates (lat,lon)"
           value={location}
           onChange={(e) => setLocation(e.target.value)}
-          style={{
-            padding: '10px',
-            width: '48%',
-            marginRight: '8px',
-            borderRadius: '8px',
-            border: '1px solid #ccc',
-          }}
+          style={{ width: '60%', padding: 10, marginRight: 10, borderRadius: 8, border: '1px solid #ccc' }}
         />
-        <button
-          onClick={handleFetch}
-          style={{
-            backgroundColor: '#007acc',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            padding: '10px 15px',
-            cursor: 'pointer',
-            fontWeight: '600',
-            marginRight: '8px',
-          }}
-          disabled={listening || speaking}
-        >
+        <button onClick={handleFetch} style={{ padding: '10px 20px', borderRadius: 8, background: '#007acc', color: 'white', border: 'none' }}>
           Get Weather
         </button>
-        <button
-          onClick={addFavorite}
-          disabled={!weather || listening || speaking}
-          style={{
-            backgroundColor: '#0a74da',
-            color: 'white',
-            border: 'none',
-            borderRadius: '12px',
-            padding: '10px 20px',
-            cursor: weather && !listening && !speaking ? 'pointer' : 'not-allowed',
-            fontWeight: '700',
-            boxShadow: '0 3px 6px rgba(10,116,218,0.4)',
-            transition: 'background-color 0.25s ease',
-          }}
-          onMouseEnter={(e) => {
-            if (weather && !listening && !speaking) e.currentTarget.style.backgroundColor = '#064e9d';
-          }}
-          onMouseLeave={(e) => {
-            if (weather && !listening && !speaking) e.currentTarget.style.backgroundColor = '#0a74da';
-          }}
-          title={weather ? 'Add current location to favorites' : 'No location to add'}
-        >
+        <button onClick={addFavorite} disabled={!weather} style={{ padding: '10px 20px', borderRadius: 8, marginLeft: 10, background: '#0a74da', color: 'white', border: 'none' }}>
           Save to Favorites
         </button>
         <button
-          onClick={startListening}
-          disabled={listening || speaking}
-          title={listening ? 'Listening...' : 'Speak location'}
-          style={{
-            marginLeft: 8,
-            padding: '10px 14px',
-            borderRadius: '8px',
-            cursor: listening ? 'progress' : 'pointer',
-            backgroundColor: listening ? '#555' : '#007acc',
-            color: 'white',
-            border: 'none',
-          }}
+          onClick={readWeatherAloud}
+          disabled={!weather}
+          style={{ marginLeft: 10, padding: '10px 20px', borderRadius: '8px', backgroundColor: '#007acc', color: 'white', border: 'none', cursor: weather ? 'pointer' : 'not-allowed' }}
         >
-          {listening ? '🎙️ Listening...' : '🎤 Speak'}
+          🔊 Speak
         </button>
       </div>
 
       {favorites.length > 0 && (
-        <div
-          className="favorites"
-          style={{ marginTop: '20px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          style={{ marginBottom: 15 }}
         >
-          <h3 style={{ color: '#0a74da', fontWeight: '700', width: '100%' }}>Favorites</h3>
+          <h3 style={{ color: '#0a74da' }}>Favorites</h3>
           {favorites.map((city) => (
             <button
               key={city}
               onClick={() => fetchFavorite(city)}
-              style={{
-                backgroundColor: '#0a74da',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '10px 20px',
-                cursor: 'pointer',
-                color: 'white',
-                fontWeight: '700',
-                boxShadow: '0 3px 6px rgba(10,116,218,0.4)',
-                transition: 'background-color 0.25s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#064e9d')}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#0a74da')}
+              style={{ margin: 5, padding: '8px 15px', borderRadius: 10, background: '#0a74da', color: 'white', border: 'none' }}
             >
               {city}
             </button>
           ))}
-        </div>
+        </motion.div>
       )}
 
-      {error && (
-        <p
-          className="error"
-          style={{ color: '#b00020', fontWeight: '600', marginTop: '20px', textAlign: 'center' }}
-        >
-          {error}
-        </p>
-      )}
+      {error && <p style={{ color: 'red' }}>{error}</p>}
 
       {weather && (
-        <div className="weather-info" style={{ margin: '30px 0 20px 0', textAlign: 'left' }}>
-          {condition && iconMap[condition.split(',')[0]] && (
-            <i
-              className={`wi ${iconMap[condition.split(',')[0]]}`}
-              style={{
-                fontSize: '80px',
-                color: '#007acc',
-                display: 'block',
-                textAlign: 'center',
-                marginBottom: '10px',
-              }}
-            />
-          )}
-          <p>
-            <strong>Location:</strong> {weather.location}
-          </p>
-          <p>
-            <strong>Temperature:</strong> {weather.temperature} °C
-          </p>
-          <p>
-            <strong>Condition:</strong> {condition}
-          </p>
-          <p>
-            <strong>Alert:</strong> {weather.alert}
-          </p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          style={{ marginBottom: 20 }}
+        >
+          <h2>{weather.location}</h2>
+          <div>
+            <i className={`wi ${iconMap[weather.condition] || 'wi-day-sunny'}`} style={{ fontSize: 60, color: '#007acc' }}></i>
+          </div>
+          <p><b>Temperature:</b> {weather.temperature} °C</p>
+          <p><b>Condition:</b> {weather.condition}</p>
+          <p><b>Alert:</b> {weather.alert}</p>
+        </motion.div>
       )}
 
       {forecast.length > 0 && (
-        <div className="forecast-info" style={{ marginTop: '30px' }}>
-          <h3
-            style={{
-              fontWeight: '600',
-              color: '#1681c2',
-              marginBottom: '15px',
-              textAlign: 'left',
-            }}
-          >
-            5-Day Forecast
-          </h3>
-          {renderForecastDays()}
-          <h4 style={{ marginTop: 25 }}>Hourly Forecast for {forecast[selectedDayIndex].date}</h4>
-          {renderHourly(forecast[selectedDayIndex].hours)}
+        <div style={{ marginBottom: 20 }}>
+          <h3>5-Day Forecast</h3>
+          <div style={{ display: 'flex', overflowX: 'auto', gap: 10 }}>
+            {forecast.slice(0, 5).map((day, idx) => (
+              <motion.div
+                key={day.date}
+                onClick={() => selectDay(idx)}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: idx * 0.1 }}
+                style={{
+                  cursor: 'pointer',
+                  padding: 10,
+                  borderRadius: 12,
+                  border: idx === selectedDayIndex ? '2px solid #007acc' : '1px solid #ccc',
+                  background: idx === selectedDayIndex ? '#f3f8fd' : '#fbfdff',
+                }}
+              >
+                <div><b>{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}</b></div>
+                <div>{day.date}</div>
+                <i className={`wi ${iconMap[day.conditions.split(',')[0]] || 'wi-day-sunny'}`} style={{ fontSize: 30, color: '#007acc' }}></i>
+                <div>{day.temperature}°C</div>
+                <div>{day.conditions}</div>
+              </motion.div>
+            ))}
+          </div>
+          <h4 style={{ marginTop: 15 }}>Hourly Forecast for {forecast[selectedDayIndex].date}</h4>
+          <div style={{ display: 'flex', overflowX: 'auto', gap: 8 }}>
+            {forecast[selectedDayIndex].hours.map((hour, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, delay: i * 0.05 }}
+                style={{ minWidth: 70, padding: 6, border: '1px solid #ced6e0', borderRadius: 8, textAlign: 'center', background: '#f0f8ff', color: '#2f3542' }}
+              >
+                <div style={{ fontWeight: '600', fontSize: 13 }}>{hour.time}</div>
+                <i className={`wi ${iconMap[hour.conditions] || 'wi-day-sunny'}`} style={{ fontSize: 30, color: '#007acc' }}></i>
+                <div>{hour.temperature}°C</div>
+                <div style={{ fontSize: 11 }}>{hour.conditions}</div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Suggestions panel */}
-      <div
-        style={{
-          marginTop: '30px',
-          background: '#f1f7fc',
-          padding: '15px 20px',
-          borderRadius: '10px',
-          boxShadow: '0 2px 8px #c6dafc',
-          opacity: suggestions.activity ? 1 : 0,
-          transition: 'opacity 0.5s ease-in-out',
-        }}
-      >
-        <h3 style={{ color: '#1681c2' }}>Suggested Activity</h3>
-        <p style={{ fontStyle: 'italic', fontWeight: '600' }}>{suggestions.activity || 'Loading activity...'}</p>
+      <div style={{ marginTop: 25, padding: 20, background: '#e9f0f9', borderRadius: 12 }}>
+        <h3>Suggested Activity</h3>
+        <p><em>{suggestions.activity || 'Loading activity...'}</em></p>
 
-        <h3 style={{ color: '#1681c2' }}>Mood Playlist</h3>
+        <h3>Mood Playlist</h3>
         {suggestions.playlistUrl ? (
-          <p>
-            <a
-              href={suggestions.playlistUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: '#0a74da', fontWeight: '600', textDecoration: 'underline' }}
-            >
-              {suggestions.playlistName}
-            </a>
-          </p>
+          <p><a href={suggestions.playlistUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#0a74da', fontWeight: '600' }}>{suggestions.playlistName}</a></p>
         ) : (
-          <p style={{ color: '#0a74da', fontWeight: 600 }}>Loading playlist...</p>
+          <p>Loading playlist...</p>
         )}
 
-        <h3 style={{ color: '#1681c2' }}>Motivational Quote</h3>
-        <blockquote style={{ fontSize: '1.1em', fontStyle: 'italic', margin: '8px 0' }}>
-          {suggestions.motivationalQuote || 'Loading quote...'}
-        </blockquote>
+        <h3>Motivational Quote</h3>
+        <blockquote style={{ fontStyle: 'italic', marginTop: 5 }}>{suggestions.motivationalQuote || 'Loading quote...'}</blockquote>
       </div>
 
-      {/* Community Reports */}
-      <CommunityReports userLocation={userCoords} />
-
-      {/* Mood Feedback Section */}
-      <div
-        style={{
-          marginTop: '25px',
-          padding: '15px 20px',
-          borderRadius: '10px',
-          background: '#eef4fb',
-          boxShadow: '0 2px 8px #b3c9ee',
-          display: 'flex',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '12px',
-        }}
-      >
-        <label style={{ fontWeight: 700, fontSize: '1.1em', color: '#1681c2' }}>How are you feeling today?</label>
-        {['😃', '🙂', '😐', '🙁'].map((emoji) => (
-          <button
-            key={emoji}
-            onClick={() => handleMoodSelect(emoji)}
-            style={{
-              fontSize: '28px',
-              cursor: 'pointer',
-              background: userMood === emoji ? '#0a74da' : 'transparent',
-              border: userMood === emoji ? '2px solid #064e9d' : '2px solid transparent',
-              borderRadius: '8px',
-              padding: '5px 10px',
-              transition: 'all 0.25s',
-              color: userMood === emoji ? 'white' : '#222',
-            }}
-            title={`Select mood ${emoji}`}
-          >
-            {emoji}
-          </button>
-        ))}
+      <div style={{ marginTop: 25 }}>
+        <label style={{ fontWeight: '700', fontSize: 16, color: '#1681c2' }}>How are you feeling today?</label>
+        <div style={{ display: 'flex', gap: 12, marginTop: 10 }}>
+          {['😃', '🙂', '😐', '🙁'].map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => setUserMood(emoji)}
+              style={{
+                fontSize: 28,
+                cursor: 'pointer',
+                background: userMood === emoji ? '#0a74da' : 'transparent',
+                border: userMood === emoji ? '2px solid #064e9d' : '2px solid transparent',
+                borderRadius: 8,
+                padding: '5px 10px',
+                color: userMood === emoji ? 'white' : '#222',
+                transition: 'all 0.25s',
+              }}
+              title={`Select mood ${emoji}`}
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
       </div>
     </>
   );
 };
 
 export default WeatherWidget;
+
