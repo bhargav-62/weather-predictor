@@ -7,7 +7,6 @@ import Home from './Home';
 import ImageLocationWeather from './ImageLocationWeather';
 import './styles.css';
 
-// Firebase messaging imports
 import { requestForToken, onMessageListener } from './firebase-messaging';
 
 function App() {
@@ -15,10 +14,8 @@ function App() {
   const [isTokenFound, setTokenFound] = useState(false);
 
   useEffect(() => {
-    // Request notification permission and get FCM token
     requestForToken(setTokenFound);
 
-    // Listener for foreground messages
     onMessageListener()
       .then(payload => {
         const { title, body } = payload.notification;
@@ -43,24 +40,16 @@ function App() {
         >
           <h1>Weather Predictor</h1>
           <nav>
-            <Link to="/" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>
-              Home
-            </Link>
-            <Link to="/weather" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>
-              Weather
-            </Link>
-            <Link to="/image-weather" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>
-              Image Weather
-            </Link>
-            <Link to="/privacy-policy" style={{ color: '#8ecae6', fontWeight: 600, textDecoration: 'none' }}>
-              Privacy Policy
-            </Link>
+            <Link to="/" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>Home</Link>
+            <Link to="/weather" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>Weather</Link>
+            <Link to="/image-weather" style={{ color: '#8ecae6', marginRight: 20, fontWeight: 600, textDecoration: 'none' }}>Image Weather</Link>
+            <Link to="/privacy-policy" style={{ color: '#8ecae6', fontWeight: 600, textDecoration: 'none' }}>Privacy Policy</Link>
           </nav>
           <ThemeSwitcher />
         </header>
 
         <main style={{ flexGrow: 1, padding: 20 }}>
-          {/* ---- Always-Visible Static Informational Content ---- */}
+          {/* Static visible content to satisfy AdSense: Always visible on all pages */}
           <div
             style={{
               background: "#f7fafc",
@@ -74,23 +63,19 @@ function App() {
             }}
           >
             <h2>Welcome to Weather Predictor</h2>
-            <p>
-              Weather Predictor gives you live weather for any city or coordinates.
-              Instantly get activity suggestions, motivational quotes, and music playlists for every weather type!
-            </p>
-            <h3>How to use:</h3>
+            <p>Get accurate weather forecast and climate information for any location.</p>
+            <h3>How to Use:</h3>
             <ul>
-              <li>Enter your city or coordinates in the search box below.</li>
-              <li>Click <strong>Get Weather</strong>.</li>
-              <li>View today's suggested activity and motivational quote.</li>
-              <li>Enjoy a mood-based playlist for your weather!</li>
+              <li>Enter city name or coordinates in the search bar.</li>
+              <li>Click the "Get Weather" button.</li>
+              <li>View current weather, suggested activities, motivational quotes, and playlists.</li>
+              <li>Switch themes using the toggle in the header.</li>
             </ul>
-            <h3>Sample Content (always visible):</h3>
+            <h3>Sample Content:</h3>
             <p><b>Suggested Activity:</b> Take a walk in the park or try light gardening.</p>
-            <p><b>Mood Playlist:</b> Sunny Beats – happy and energetic hits.</p>
-            <p><b>Motivational Quote:</b> "Every day is a chance to do something great."</p>
+            <p><b>Motivational Quote:</b> "Every day is a new opportunity to grow."</p>
+            <p><b>Playlist Suggestion:</b> Sunny Vibes - happy and energetic music.</p>
           </div>
-          {/* ---- End Always-Visible Static Informational Content ---- */}
 
           <Routes>
             <Route path="/" element={<Home />} />
@@ -99,22 +84,22 @@ function App() {
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
 
-          {/* Notification permission and messages */}
+          {/* Notifications */}
           <div>
             {isTokenFound ? (
               <p style={{ color: 'green' }}>Notifications enabled!</p>
             ) : (
-              <p style={{ color: 'red' }}>Please allow notifications to get alerts.</p>
+              <p style={{ color: 'red' }}>Please allow notifications to receive alerts.</p>
             )}
           </div>
           {notification.title && (
             <div
               style={{
                 border: '1px solid gray',
-                borderRadius: '5px',
-                padding: '10px',
-                marginTop: '20px',
-                backgroundColor: '#f0f8ff',
+                borderRadius: 5,
+                padding: 10,
+                marginTop: 20,
+                backgroundColor: '#e0f7fa',
               }}
             >
               <h3>{notification.title}</h3>
