@@ -1,56 +1,48 @@
-// src/serviceWorker.js
-
 const CACHE_NAME = 'weather-app-cache-v1';
 const urlsToCache = [
   '/',
   '/index.html',
-  '/static/js/main.js',     // Adjust paths as needed after build
-  '/static/css/main.css',
-  // Add other static assets you want to cache upfront
+  '/favicon.ico',
+  // Add your static assets you want cached here
 ];
 
-// Install service worker and cache critical assets
-self.addEventListener('install', event => {
+// Install service worker and cache static files
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(urlsToCache);
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
-  self.skipWaiting();
 });
 
-// Activate service worker and clean old caches
-self.addEventListener('activate', event => {
+// Activate service worker and clean up old caches
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(cacheNames =>
+    caches.keys().then(keys => 
       Promise.all(
-        cacheNames.filter(name => name !== CACHE_NAME)
-          .map(name => caches.delete(name))
+        keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
       )
     )
   );
-  self.clients.claim();
 });
 
-// Fetch handler: respond with cached assets or network
-self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request).then(response => {
-      if (response) {
-        return response;  // Serve from cache
-      }
-      return fetch(event.request).then(networkResponse => {
-        // Cache new requests dynamically
-        return caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, networkResponse.clone());
+// Fetch handler for requests
+self.addEventListener('fetch', (event) => {
+  const { request } = event;
+
+  // For weather API requests, try cache first, then network and update cache
+  if (request.url.includes('api.weatherapi.com')) {
+    event.respondWith(
+      caches.match(request).then(cachedResponse => {
+        const networkFetch = fetch(request).then(networkResponse => {
+          caches.open(CACHE_NAME).then(cache => cache.put(request, networkResponse.clone()));
           return networkResponse;
-        });
-      }).catch(() => {
-        // Fallback logic when offline and not cached
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-      });
-    })
-  );
+        }).catch(() => cachedResponse); // fallback to cache if offline
+        return cachedResponse || networkFetch;
+      })
+    );
+  } else {
+    // For other assets, serve cache first, then network
+    event.respondWith(
+      caches.match(request).then(response => response || fetch(request))
+    );
+  }
 });
