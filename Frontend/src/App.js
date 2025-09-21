@@ -33,7 +33,7 @@ function App() {
         </header>
 
         <main style={{ flexGrow: 1, padding: 20 }}>
-          {/* Static content visible on all pages to satisfy AdSense */}
+          {/* Static homepage content visible for AdSense */}
           <div
             style={{
               background: "#f7fafc",
