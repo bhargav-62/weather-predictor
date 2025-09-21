@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import PrivacyPolicy from './PrivacyPolicy';
 import WeatherWidget from './WeatherWidget';
@@ -7,23 +7,7 @@ import Home from './Home';
 import ImageLocationWeather from './ImageLocationWeather';
 import './styles.css';
 
-import { requestForToken, onMessageListener } from './firebase-messaging';
-
 function App() {
-  const [notification, setNotification] = useState({ title: '', body: '' });
-  const [isTokenFound, setTokenFound] = useState(false);
-
-  useEffect(() => {
-    requestForToken(setTokenFound);
-
-    onMessageListener()
-      .then(payload => {
-        const { title, body } = payload.notification;
-        setNotification({ title, body });
-      })
-      .catch(err => console.log('Failed to receive message: ', err));
-  }, []);
-
   return (
     <Router>
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -49,7 +33,7 @@ function App() {
         </header>
 
         <main style={{ flexGrow: 1, padding: 20 }}>
-          {/* Static visible content to satisfy AdSense: Always visible on all pages */}
+          {/* Static content visible on all pages to satisfy AdSense */}
           <div
             style={{
               background: "#f7fafc",
@@ -69,12 +53,12 @@ function App() {
               <li>Enter city name or coordinates in the search bar.</li>
               <li>Click the "Get Weather" button.</li>
               <li>View current weather, suggested activities, motivational quotes, and playlists.</li>
-              <li>Switch themes using the toggle in the header.</li>
+              <li>Switch themes with the toggle in the header.</li>
             </ul>
             <h3>Sample Content:</h3>
             <p><b>Suggested Activity:</b> Take a walk in the park or try light gardening.</p>
             <p><b>Motivational Quote:</b> "Every day is a new opportunity to grow."</p>
-            <p><b>Playlist Suggestion:</b> Sunny Vibes - happy and energetic music.</p>
+            <p><b>Playlist:</b> Sunny Vibes – happy and energetic music.</p>
           </div>
 
           <Routes>
@@ -83,29 +67,6 @@ function App() {
             <Route path="/image-weather" element={<ImageLocationWeather />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           </Routes>
-
-          {/* Notifications */}
-          <div>
-            {isTokenFound ? (
-              <p style={{ color: 'green' }}>Notifications enabled!</p>
-            ) : (
-              <p style={{ color: 'red' }}>Please allow notifications to receive alerts.</p>
-            )}
-          </div>
-          {notification.title && (
-            <div
-              style={{
-                border: '1px solid gray',
-                borderRadius: 5,
-                padding: 10,
-                marginTop: 20,
-                backgroundColor: '#e0f7fa',
-              }}
-            >
-              <h3>{notification.title}</h3>
-              <p>{notification.body}</p>
-            </div>
-          )}
         </main>
 
         <footer style={{ padding: 10, textAlign: 'center', backgroundColor: '#f1f1f1' }}>
